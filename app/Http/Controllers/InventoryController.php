@@ -61,7 +61,7 @@ class InventoryController extends Controller
             }, 0);
 
         // if requested quantity is greater than the total available quantity, we retun an 400 response.
-        if ($requestedQuantity > $totalAvailableQuantity) return response(['success' => false, 'message' => 'Requested quantity exceeds the total available quantity'], 400);
+        if ($requestedQuantity > $totalAvailableQuantity) return response(['success' => false, 'message' => 'Requested quantity exceeds the total available quantity of '. $totalAvailableQuantity], 400);
 
         /**
          * we loop through the available stock to calculate the requested product value 
@@ -91,7 +91,7 @@ class InventoryController extends Controller
 
         $response = [
             'success' => true, 
-            'data' => ['productValue' => $requestedProductValue], 
+            'data' => ['productValue' => round($requestedProductValue, 2)], 
             'message' => 'Success'
         ];
 

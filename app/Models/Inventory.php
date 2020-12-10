@@ -24,7 +24,7 @@ class Inventory extends Model
      */
     public static function getInventoryData() {
         // path for the data source
-        $filename = storage_path('test.csv');
+        $filename = storage_path('FertiliserInventoryMovements.csv');
 
         // reads the csv data
         $csvData = array_map('str_getcsv', file($filename));
