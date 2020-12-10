@@ -60,7 +60,8 @@ class Inventory extends Model
         foreach ($inventoryData as $inventory) {
             if ($inventory['Type'] == self::TYPE_PURCHASE) {
                 /**
-                 * creates an array of all the purchases before they are applied because the product purchased
+                 * creates an array of all the purchases before they are applied 
+                 * because the product purchased
                  * first should be utilised first
                  */
                 $availableStock[] = $inventory;
@@ -75,6 +76,11 @@ class Inventory extends Model
                     // to verify the initial application quantity is correct
                     if (abs($inventory['Quantity']) > 0) {
                         $usedQuantity = abs($inventory['Quantity']) - $stock['Quantity'];
+
+                        if ($usedQuantity == 0) {
+                            unset($availableStock[$key]);
+                            $inventory['Quantity'] = $usedQuantity;
+                        }
                     }
 
                     if ($usedQuantity > 0) {
@@ -96,7 +102,7 @@ class Inventory extends Model
                         $stock['Quantity'] = abs($usedQuantity);
                         $availableStock[$key] = $stock;
                     }
-                }
+                } 
             }            
         }
 
@@ -115,7 +121,7 @@ class Inventory extends Model
     {
         //setting the initial requested value to zero.
         $requestedProductValue = 0;
-
+        // 2
         /**
          * we loop through the available stock to calculate the requested product value 
          * based on the value at which the stock was purchased.

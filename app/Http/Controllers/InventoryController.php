@@ -40,16 +40,18 @@ class InventoryController extends Controller
         
         //Gets the available stock from all the purchases and application based on the dates
         $availableStock = Inventory::getAvailableStock($inventoryData);
-
+        return $availableStock;
         //setting the initial requested value to zero.
         $requestedProductValue = 0;
         
         // In case there is not data in the datasource or database 
         if (empty($availableStock)) return response(['success' => true, 'data' => [], 'message' => 'No Stock Available'], 200);
 
+        // Checks if requested quantity is within the limit of available stock
         if (!Inventory::validateRequestedQuantity($availableStock, $requestedQuantity)) 
             return response(['success' => false, 'message' => 'Requested quantity exceeds the total available quantity'], 400);
         
+        //calculate the amount for the requested quantity
         $requestedProductValue = Inventory::calculateStockAmount($availableStock, $requestedQuantity);
 
         $response = [
