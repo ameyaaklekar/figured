@@ -37,10 +37,6 @@ class Inventory extends Model
         // removes the header from the array.
         array_shift($csvData);
 
-        // Sorts the array in ASC order based on Date (date of transaction Purchase/Applied)
-        $dateColumn = array_column($csvData, 'Date');
-        array_multisort($dateColumn, SORT_ASC, $csvData);
-
         return $csvData;
     }
     
@@ -121,7 +117,7 @@ class Inventory extends Model
     {
         //setting the initial requested value to zero.
         $requestedProductValue = 0;
-        // 2
+
         /**
          * we loop through the available stock to calculate the requested product value 
          * based on the value at which the stock was purchased.

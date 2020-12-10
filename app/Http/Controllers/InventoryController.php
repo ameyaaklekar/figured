@@ -40,7 +40,7 @@ class InventoryController extends Controller
         
         //Gets the available stock from all the purchases and application based on the dates
         $availableStock = Inventory::getAvailableStock($inventoryData);
-        return $availableStock;
+
         //setting the initial requested value to zero.
         $requestedProductValue = 0;
         
