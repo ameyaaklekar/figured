@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
  */
 class InventoryController extends Controller
 {
+    public $inventoryData;
 
     /**
      * Accepts "product/value" request. Computes the available stock and
@@ -23,7 +24,7 @@ class InventoryController extends Controller
      */
     public function getProductValue(Request $request) {
         $validationRule = [
-            'quantity' => ['required', 'integer'] 
+            'quantity' => ['required', 'integer', 'min:1'] 
         ];
 
         $messages = [
@@ -35,9 +36,6 @@ class InventoryController extends Controller
         Validator::make($request->all(), $validationRule, $messages)->validate();
 
         $requestedQuantity = (int) $request->quantity;
-
-        // if requested quantity is 0, we retun an 400 response.
-        if ($requestedQuantity == 0) return response(['success' => false, 'message' => 'Invalid Requested quantity'], 400);
 
         //Gets the inventory data from the datasource
         $inventoryData = Inventory::getInventoryData();
@@ -51,6 +49,28 @@ class InventoryController extends Controller
         // In case there is not data in the datasource or database 
         if (empty($availableStock)) return response(['success' => true, 'data' => [], 'message' => 'No Stock Available'], 200);
 
+        if (!$this->validateRequestedQuantity($availableStock, $requestedQuantity)) 
+            return response(['success' => false, 'message' => 'Requested quantity exceeds the total available quantity'], 400);
+        
+        $requestedProductValue = Inventory::calculateStockAmount($availableStock, $requestedQuantity);
+
+        $response = [
+            'success' => true, 
+            'data' => ['productValue' => $requestedProductValue], 
+            'message' => 'Success'
+        ];
+
+        return response($response, 200);
+    }
+
+    /**
+     * To verify the requested quantity is available
+     *
+     * @param Array $availableStock
+     * @param Integer $requestedQuantity
+     * @return void
+     */
+    public function validateRequestedQuantity($availableStock, $requestedQuantity) {
         /**
          * we are getting the total stock quantity available regardless the purchase date,
          * to verify if the requested quantity is available.
@@ -61,40 +81,8 @@ class InventoryController extends Controller
             }, 0);
 
         // if requested quantity is greater than the total available quantity, we retun an 400 response.
-        if ($requestedQuantity > $totalAvailableQuantity) return response(['success' => false, 'message' => 'Requested quantity exceeds the total available quantity of '. $totalAvailableQuantity], 400);
+        if ($requestedQuantity > $totalAvailableQuantity) return false;
 
-        /**
-         * we loop through the available stock to calculate the requested product value 
-         * based on the value at which the stock was purchased.
-         */
-        foreach ($availableStock as $stock) {
-            // if requested quantity is less than zero which means the amount has been calculated.
-            if ($requestedQuantity < 0) break;
-
-            if ($requestedQuantity <= $stock['Quantity']) {
-                /**
-                 * Since requested quantity is greater than the purchased quantity, it only utilises 
-                 * the requested quantity at the purchased price.
-                 */
-                $requestedProductValue += $requestedQuantity * $stock['Unit Price'];
-            } else if ($requestedQuantity > $stock['Quantity']) {
-                /**
-                 * if requested quantity is greated than the purchased quantity, which means whole purchase 
-                 * order was utilised.
-                 */
-                $requestedProductValue += $stock['Quantity'] * $stock['Unit Price'];
-            }
-            
-            //we substract the calculated quantity with the requested quantity.
-            $requestedQuantity -= $stock['Quantity'];
-        }
-
-        $response = [
-            'success' => true, 
-            'data' => ['productValue' => round($requestedProductValue, 2)], 
-            'message' => 'Success'
-        ];
-
-        return response($response, 200);
+        return true;
     }
 }

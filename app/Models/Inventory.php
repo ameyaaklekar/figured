@@ -100,6 +100,48 @@ class Inventory extends Model
             }            
         }
 
-        return $availableStock;
+        return array_values($availableStock);
+    }
+
+    /**
+     * Calculates the amount for the requested quantity based on the 
+     * available stock and at the price they were bought at. 
+     *
+     * @param Arrya $availableStock
+     * @param Integer $requestedQuantity
+     * @return Float
+     */
+    public static function calculateStockAmount($availableStock, $requestedQuantity)
+    {
+        //setting the initial requested value to zero.
+        $requestedProductValue = 0;
+
+        /**
+         * we loop through the available stock to calculate the requested product value 
+         * based on the value at which the stock was purchased.
+         */
+        foreach ($availableStock as $stock) {
+            // if requested quantity is less than zero which means the amount has been calculated.
+            if ($requestedQuantity < 0) break;
+
+            if ($requestedQuantity <= $stock['Quantity']) {
+                /**
+                 * Since requested quantity is greater than the purchased quantity, it only utilises 
+                 * the requested quantity at the purchased price.
+                 */
+                $requestedProductValue += $requestedQuantity * $stock['Unit Price'];
+            } else if ($requestedQuantity > $stock['Quantity']) {
+                /**
+                 * if requested quantity is greated than the purchased quantity, which means whole purchase 
+                 * order was utilised.
+                 */
+                $requestedProductValue += $stock['Quantity'] * $stock['Unit Price'];
+            }
+            
+            //we substract the calculated quantity with the requested quantity.
+            $requestedQuantity -= $stock['Quantity'];
+        }
+
+        return round($requestedProductValue, 2);
     }
 }
