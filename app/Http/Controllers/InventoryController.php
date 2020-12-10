@@ -6,12 +6,22 @@ use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * InventoryController class
+ * 
+ * Handles the api requests for Inventory
+ */
 class InventoryController extends Controller
 {
-    const TYPE_PURCHASE = 'Purchase';
-    const TYPE_APPLICATION = 'Application';
 
-    public function getInventory(Request $request) {
+    /**
+     * Accepts "product/value" request. Computes the available stock and
+     * returns the value for the requested quantity
+     *
+     * @param Request $request
+     * @return void
+     */
+    public function getProductValue(Request $request) {
         $validationRule = [
             'quantity' => ['required', 'integer'] 
         ];
@@ -21,49 +31,70 @@ class InventoryController extends Controller
             'integer' => 'Please enter valid quantity'
         ];
 
+        // Request Validation
         Validator::make($request->all(), $validationRule, $messages)->validate();
 
-        $requestedQuantity = $request->quantity;
+        $requestedQuantity = (int) $request->quantity;
+
+        // if requested quantity is 0, we retun an 400 response.
+        if ($requestedQuantity == 0) return response(['success' => false, 'message' => 'Invalid Requested quantity'], 400);
+
+        //Gets the inventory data from the datasource
         $inventoryData = Inventory::getInventoryData();
+        
+        //Gets the available stock from all the purchases and application based on the dates
+        $availableStock = Inventory::getAvailableStock($inventoryData);
 
-        $response = array_reduce($inventoryData, function($purchaseData, $inventory) {
-            if ($inventory['Type'] == self::TYPE_PURCHASE) {
+        //setting the initial requested value to zero.
+        $requestedProductValue = 0;
+        
+        // In case there is not data in the datasource or database 
+        if (empty($availableStock)) return response(['success' => true, 'data' => [], 'message' => 'No Stock Available'], 200);
 
-                $purchaseData[] = $inventory;
+        /**
+         * we are getting the total stock quantity available regardless the purchase date,
+         * to verify if the requested quantity is available.
+         */
+        $totalAvailableQuantity = array_reduce(array_column($availableStock, 'Quantity'), 
+            function ($totalQuantity, $stock) {
+                return $totalQuantity += $stock;
+            }, 0);
 
-            } else if ($inventory['Type'] == self::TYPE_APPLICATION) {
+        // if requested quantity is greater than the total available quantity, we retun an 400 response.
+        if ($requestedQuantity > $totalAvailableQuantity) return response(['success' => false, 'message' => 'Requested quantity exceeds the total available quantity'], 400);
 
-                $purchaseData = array_reduce($purchaseData, function($processedStock, $availableStock) use ($inventory) {
+        /**
+         * we loop through the available stock to calculate the requested product value 
+         * based on the value at which the stock was purchased.
+         */
+        foreach ($availableStock as $stock) {
+            // if requested quantity is less than zero which means the amount has been calculated.
+            if ($requestedQuantity < 0) break;
 
-                    if (!empty($processedStock) && $processedStock['Quantity'] > 0) {
-
-                        $processedStock['Quantity'] -= $availableStock['Quantity'];
-
-                    } else {
-
-                        $processedStock = $availableStock;
-                        $processedStock['Quantity'] = abs($inventory['Quantity']) - $availableStock['Quantity'];
-
-                    }
-
-                    if ($processedStock['Quantity'] > 0) {
-
-                        unset($availableStock);
-
-                    } else if ($processedStock['Quantity'] <= 0) {
-
-                        $processedStock['Quantity'] = abs($processedStock['Quantity']);
-
-                    }
-
-                    return $processedStock;
-                }, []);
+            if ($requestedQuantity <= $stock['Quantity']) {
+                /**
+                 * Since requested quantity is greater than the purchased quantity, it only utilises 
+                 * the requested quantity at the purchased price.
+                 */
+                $requestedProductValue += $requestedQuantity * $stock['Unit Price'];
+            } else if ($requestedQuantity > $stock['Quantity']) {
+                /**
+                 * if requested quantity is greated than the purchased quantity, which means whole purchase 
+                 * order was utilised.
+                 */
+                $requestedProductValue += $stock['Quantity'] * $stock['Unit Price'];
             }
+            
+            //we substract the calculated quantity with the requested quantity.
+            $requestedQuantity -= $stock['Quantity'];
+        }
 
-            return $purchaseData;
+        $response = [
+            'success' => true, 
+            'data' => ['productValue' => $requestedProductValue], 
+            'message' => 'Success'
+        ];
 
-        }, []);
-
-        return $response;
+        return response($response, 200);
     }
 }

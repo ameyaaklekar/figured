@@ -15,8 +15,4 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/test', function (Request $request) {
-    return 'hello';
-});
-
-Route::post('product/quantity', [InventoryController::class, 'getInventory']);
+Route::post('product/value', [InventoryController::class, 'getProductValue']);
