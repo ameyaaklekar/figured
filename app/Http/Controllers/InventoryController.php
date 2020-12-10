@@ -13,8 +13,6 @@ use Illuminate\Support\Facades\Validator;
  */
 class InventoryController extends Controller
 {
-    public $inventoryData;
-
     /**
      * Accepts "product/value" request. Computes the available stock and
      * returns the value for the requested quantity
