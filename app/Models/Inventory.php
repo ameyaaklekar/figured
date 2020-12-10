@@ -144,4 +144,27 @@ class Inventory extends Model
 
         return round($requestedProductValue, 2);
     }
+
+    /**
+     * To verify the requested quantity is available
+     *
+     * @param Array $availableStock
+     * @param Integer $requestedQuantity
+     * @return void
+     */
+    public static function validateRequestedQuantity($availableStock, $requestedQuantity) {
+        /**
+         * we are getting the total stock quantity available regardless the purchase date,
+         * to verify if the requested quantity is available.
+         */
+        $totalAvailableQuantity = array_reduce(array_column($availableStock, 'Quantity'), 
+            function ($totalQuantity, $stock) {
+                return $totalQuantity += $stock;
+            }, 0);
+
+        // if requested quantity is greater than the total available quantity, we retun an 400 response.
+        if ($requestedQuantity > $totalAvailableQuantity) return false;
+
+        return true;
+    }
 }

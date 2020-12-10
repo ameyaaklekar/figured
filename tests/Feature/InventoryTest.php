@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
-use App\Http\Controllers\InventoryController;
 use App\Models\Inventory;
 
 class InventoryTest extends TestCase
@@ -33,15 +32,15 @@ class InventoryTest extends TestCase
 
     public function testValidRequestedQuantity() 
     {
-        $inventoryController = new InventoryController();
-        $response = $inventoryController->validateRequestedQuantity($this->testData, 10);
+        $inventory = new Inventory();
+        $response = $inventory->validateRequestedQuantity($this->testData, 10);
         $this->assertTrue($response);
     }
 
     public function testInValidRequestedQuantity() 
     {
-        $inventoryController = new InventoryController();
-        $response = $inventoryController->validateRequestedQuantity($this->testData, 40);
+        $inventory = new Inventory();
+        $response = $inventory->validateRequestedQuantity($this->testData, 40);
         $this->assertFalse($response);
     }
 
