@@ -13,6 +13,12 @@
 ## Overview
 This API calculates the price for the quantity required based on the stock intake and costing. As per the requirements, the stock purchased first needs to be used first. Hence the API makes the required calculations and return the price for the required quantity.
 
+### Testing
+The API is tested with the Unit Tests which can be found in the followind directory
+```
+test/Feature/InventoryTest.php
+```
+
 ## Installation
 Follow the steps below to clone and run the project
 
@@ -45,6 +51,14 @@ You can either use API client to make the request or clone the front end VueJs a
 
 Follow the instructions on the [VueJs App](https://github.com/ameyaaklekar/figured-vue) repository
  
+ ### Run the test cases
+ To run the test case, open the terminal in the root directory and run the following command
+
+ ```
+ php artisan test
+ ```
+ 
+ this will run all the test cases in the `test/` directory.
 
 
 
