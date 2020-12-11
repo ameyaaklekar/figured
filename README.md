@@ -41,7 +41,8 @@ You can either use API client to make the request or clone the front end VueJs a
  3. Set the header `Content-Type: application/json` and `Accept: application/json`
  4. Add the quantity parameter to the body in JSON format as follows `{ "quantity": NUMBER }`
 
-**To use the VueJs App**
+**To use the VueJs App:**
+
 Follow the instructions on the [VueJs App](https://github.com/ameyaaklekar/figured-vue) repository
  
 
